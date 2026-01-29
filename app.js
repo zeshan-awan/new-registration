@@ -339,30 +339,25 @@ async function signInWithPopupOrRedirect(provider, providerName) {
   } catch (e) {
     console.error(`${providerName} auth error:`, e);
     
-    const popupIssue =
-      e?.code === "auth/popup-blocked" ||
-      e?.code === "auth/popup-closed-by-user" ||
-      e?.code === "auth/cancelled-popup-request";
-
-    if (popupIssue) {
-      showMsg(authMsg, "Popup blocked. Redirecting…", "info");
-      try {
-        await signInWithRedirect(auth, provider);
-      } catch (redirectError) {
-        console.error('Redirect error:', redirectError);
-        showMsg(authMsg, `Redirect failed: ${redirectError.message}`, "error");
-      }
-      return;
-    }
-
-    if (e?.code === "auth/account-exists-with-different-credential") {
-      showMsg(authMsg, "Account exists with different sign-in method. Try email/password.", "error");
+    // Handle specific common errors
+    if (e?.code === "auth/popup-blocked") {
+      showMsg(authMsg, "Popup blocked by browser. Please allow popups and try again.", "error");
+    } else if (e?.code === "auth/popup-closed-by-user") {
+      showMsg(authMsg, "Sign-in cancelled. Please try again.", "error");
+    } else if (e?.code === "auth/cancelled-popup-request") {
+      showMsg(authMsg, "Sign-in cancelled. Please try again.", "error");
     } else if (e?.code === "auth/unauthorized-domain") {
-      showMsg(authMsg, "Domain not authorized. Check Firebase console settings.", "error");
+      showMsg(authMsg, "This domain is not authorized. Please contact support.", "error");
     } else if (e?.code === "auth/operation-not-allowed") {
-      showMsg(authMsg, `${providerName} sign-in is not enabled. Check Firebase console.`, "error");
+      showMsg(authMsg, `${providerName} sign-in is not enabled. Please contact support.`, "error");
+    } else if (e?.code === "auth/account-exists-with-different-credential") {
+      showMsg(authMsg, "Account exists with different sign-in method. Try email/password.", "error");
+    } else if (e?.code === "auth/invalid-api-key") {
+      showMsg(authMsg, "Invalid API configuration. Please contact support.", "error");
+    } else if (e?.code === "auth/app-not-authorized") {
+      showMsg(authMsg, "App not authorized. Please contact support.", "error");
     } else {
-      showMsg(authMsg, `${providerName} sign-in failed: ${e.message}`, "error");
+      showMsg(authMsg, `${providerName} sign-in failed. Please try again or contact support.`, "error");
     }
   }
 }
