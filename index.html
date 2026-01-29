@@ -29,13 +29,13 @@
 
     <!-- AUTH CARD -->
     <section id="authView" class="card">
-      <div class="card-header">
-        <h1>Welcome back</h1>
-        <p>Login to access your dashboard, or sign up as a new student.</p>
-      </div>
+      <!-- LOGIN VIEW -->
+      <div id="loginView">
+        <div class="card-header">
+          <h1>Welcome back</h1>
+          <p>Login to access your dashboard.</p>
+        </div>
 
-      <div class="grid two">
-        <!-- LOGIN -->
         <div class="panel">
           <h2>Login</h2>
 
@@ -53,23 +53,33 @@
 
           <div class="divider"><span>or</span></div>
 
-          <button id="googleBtn" class="btn btn-soft">
+          <button id="googleLoginBtn" class="btn btn-soft">
             <span class="icon">G</span> Sign in with Google
           </button>
 
-          <button id="githubBtn" class="btn btn-soft">
+          <button id="githubLoginBtn" class="btn btn-soft">
             <span class="icon">GH</span> Sign in with GitHub
           </button>
 
           <div class="hint">
             <b>Admin login:</b> admin@test.com / 12345678
           </div>
+
+          <div class="note">
+            Don't have an account? <a href="#" id="showSignupBtn">Sign up here</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIGNUP VIEW -->
+      <div id="signupView" class="hidden">
+        <div class="card-header">
+          <h1>Create Account</h1>
+          <p>Sign up as a new student to access the portal.</p>
         </div>
 
-        <!-- SIGNUP -->
         <div class="panel">
-          <h2>Create new user</h2>
-          <p class="muted">New student accounts will be redirected to the Student Dashboard after sign up.</p>
+          <h2>Sign Up</h2>
 
           <label class="field">
             <span>Full Name</span>
@@ -87,6 +97,20 @@
           </label>
 
           <button id="signupBtn" class="btn btn-primary">Sign Up</button>
+
+          <div class="divider"><span>or</span></div>
+
+          <button id="googleSignupBtn" class="btn btn-soft">
+            <span class="icon">G</span> Sign up with Google
+          </button>
+
+          <button id="githubSignupBtn" class="btn btn-soft">
+            <span class="icon">GH</span> Sign up with GitHub
+          </button>
+
+          <div class="note">
+            Already have an account? <a href="#" id="showLoginBtn">Login here</a>
+          </div>
 
           <div class="note">
             By creating an account you agree to basic portal usage policies.

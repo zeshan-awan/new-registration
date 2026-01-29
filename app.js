@@ -57,6 +57,8 @@ const CNIC_REGEX = /^\d{5}-\d{7}-\d{1}$/;
 
 // ===== UI refs =====
 const authView = document.getElementById("authView");
+const loginView = document.getElementById("loginView");
+const signupView = document.getElementById("signupView");
 const studentView = document.getElementById("studentView");
 const adminView = document.getElementById("adminView");
 
@@ -72,9 +74,15 @@ const loginEmail = document.getElementById("loginEmail");
 const loginPassword = document.getElementById("loginPassword");
 const loginBtn = document.getElementById("loginBtn");
 
-// OAuth
-const googleBtn = document.getElementById("googleBtn");
-const githubBtn = document.getElementById("githubBtn");
+// OAuth buttons
+const googleLoginBtn = document.getElementById("googleLoginBtn");
+const githubLoginBtn = document.getElementById("githubLoginBtn");
+const googleSignupBtn = document.getElementById("googleSignupBtn");
+const githubSignupBtn = document.getElementById("githubSignupBtn");
+
+// View switching
+const showSignupBtn = document.getElementById("showSignupBtn");
+const showLoginBtn = document.getElementById("showLoginBtn");
 
 // Signup inputs
 const signupName = document.getElementById("signupName");
@@ -122,6 +130,16 @@ function setView(view) {
   studentView.classList.add("hidden");
   adminView.classList.add("hidden");
   view.classList.remove("hidden");
+}
+
+function showLoginView() {
+  loginView.classList.remove("hidden");
+  signupView.classList.add("hidden");
+}
+
+function showSignupView() {
+  loginView.classList.add("hidden");
+  signupView.classList.remove("hidden");
 }
 
 function isAdminUser(user) {
@@ -184,29 +202,30 @@ async function ensureStudentProfile(user, providerName = "oauth") {
 
 // ===== Redirect result handler (for popup blocked cases) =====
 getRedirectResult(auth)
-  .then(async (cred) => {
-    if (!cred) return;
+  .then(async (result) => {
+    if (!result || !result.user) return;
 
-    if (cred.user.email?.toLowerCase() === ADMIN_EMAIL) {
+    if (result.user.email?.toLowerCase() === ADMIN_EMAIL) {
       showMsg(authMsg, "Admin must login using email/password only.", "error");
       await signOut(auth);
       return;
     }
 
-    // Determine provider from credential
-    const providerId = cred.providerId || "oauth";
+    // Determine provider from result
+    const providerId = result.providerId || result._tokenResponse?.providerId || "oauth";
     const providerName = providerId.includes("google")
       ? "google"
       : providerId.includes("github")
         ? "github"
         : "oauth";
 
-    await ensureStudentProfile(cred.user, providerName);
+    await ensureStudentProfile(result.user, providerName);
+    showMsg(authMsg, `Successfully signed in with ${providerName}!`, "success");
   })
   .catch((e) => {
-    // Don't hard-fail UI; just show if auth screen visible
+    console.error('Redirect result error:', e);
     if (!authView.classList.contains("hidden")) {
-      showMsg(authMsg, e.message, "error");
+      showMsg(authMsg, `Sign-in error: ${e.message}`, "error");
     }
   });
 
@@ -220,6 +239,7 @@ onAuthStateChanged(auth, async (user) => {
     sessionBadge.classList.add("hidden");
     logoutBtn.classList.add("hidden");
     setView(authView);
+    showLoginView();
     renderStudentResult(null);
     return;
   }
@@ -302,15 +322,15 @@ async function signInWithPopupOrRedirect(provider, providerName) {
   try {
     showMsg(authMsg, `Signing in with ${providerName}...`, "info");
     
-    const cred = await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
 
-    if (cred.user.email?.toLowerCase() === ADMIN_EMAIL) {
+    if (result.user.email?.toLowerCase() === ADMIN_EMAIL) {
       showMsg(authMsg, "Admin must login using email/password only.", "error");
       await signOut(auth);
       return;
     }
 
-    await ensureStudentProfile(cred.user, providerName);
+    await ensureStudentProfile(result.user, providerName);
     showMsg(
       authMsg,
       `Signed in with ${providerName[0].toUpperCase() + providerName.slice(1)}!`,
@@ -347,7 +367,7 @@ async function signInWithPopupOrRedirect(provider, providerName) {
   }
 }
 
-googleBtn.addEventListener("click", async () => {
+googleLoginBtn.addEventListener("click", async () => {
   hideMsg(authMsg);
   try {
     const provider = new GoogleAuthProvider();
@@ -360,7 +380,7 @@ googleBtn.addEventListener("click", async () => {
   }
 });
 
-githubBtn.addEventListener("click", async () => {
+githubLoginBtn.addEventListener("click", async () => {
   hideMsg(authMsg);
   try {
     const provider = new GithubAuthProvider();
@@ -371,6 +391,45 @@ githubBtn.addEventListener("click", async () => {
     console.error('GitHub button error:', e);
     showMsg(authMsg, `GitHub setup error: ${e.message}`, "error");
   }
+});
+
+googleSignupBtn.addEventListener("click", async () => {
+  hideMsg(authMsg);
+  try {
+    const provider = new GoogleAuthProvider();
+    provider.addScope('email');
+    provider.addScope('profile');
+    await signInWithPopupOrRedirect(provider, "google");
+  } catch (e) {
+    console.error('Google signup error:', e);
+    showMsg(authMsg, `Google setup error: ${e.message}`, "error");
+  }
+});
+
+githubSignupBtn.addEventListener("click", async () => {
+  hideMsg(authMsg);
+  try {
+    const provider = new GithubAuthProvider();
+    provider.addScope("user:email");
+    provider.addScope("read:user");
+    await signInWithPopupOrRedirect(provider, "github");
+  } catch (e) {
+    console.error('GitHub signup error:', e);
+    showMsg(authMsg, `GitHub setup error: ${e.message}`, "error");
+  }
+});
+
+// View switching
+showSignupBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  hideMsg(authMsg);
+  showSignupView();
+});
+
+showLoginBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  hideMsg(authMsg);
+  showLoginView();
 });
 
 // ===== Logout =====
