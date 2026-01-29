@@ -367,7 +367,7 @@ async function signInWithPopupOrRedirect(provider, providerName) {
   }
 }
 
-googleLoginBtn.addEventListener("click", async () => {
+googleLoginBtn?.addEventListener("click", async () => {
   hideMsg(authMsg);
   try {
     const provider = new GoogleAuthProvider();
@@ -380,7 +380,7 @@ googleLoginBtn.addEventListener("click", async () => {
   }
 });
 
-githubLoginBtn.addEventListener("click", async () => {
+githubLoginBtn?.addEventListener("click", async () => {
   hideMsg(authMsg);
   try {
     const provider = new GithubAuthProvider();
@@ -393,7 +393,7 @@ githubLoginBtn.addEventListener("click", async () => {
   }
 });
 
-googleSignupBtn.addEventListener("click", async () => {
+googleSignupBtn?.addEventListener("click", async () => {
   hideMsg(authMsg);
   try {
     const provider = new GoogleAuthProvider();
@@ -406,7 +406,7 @@ googleSignupBtn.addEventListener("click", async () => {
   }
 });
 
-githubSignupBtn.addEventListener("click", async () => {
+githubSignupBtn?.addEventListener("click", async () => {
   hideMsg(authMsg);
   try {
     const provider = new GithubAuthProvider();
@@ -420,13 +420,13 @@ githubSignupBtn.addEventListener("click", async () => {
 });
 
 // View switching
-showSignupBtn.addEventListener("click", (e) => {
+showSignupBtn?.addEventListener("click", (e) => {
   e.preventDefault();
   hideMsg(authMsg);
   showSignupView();
 });
 
-showLoginBtn.addEventListener("click", (e) => {
+showLoginBtn?.addEventListener("click", (e) => {
   e.preventDefault();
   hideMsg(authMsg);
   showLoginView();
