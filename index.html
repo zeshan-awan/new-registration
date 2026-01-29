@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Portal</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+
+<body>
+  <div class="bg-blur"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">SP</div>
+      <div>
+        <div class="brand-title">Student Portal</div>
+        <div class="brand-sub">Secure • Fast • Responsive</div>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <span id="sessionBadge" class="badge hidden">Signed in</span>
+      <button id="logoutBtn" class="btn btn-ghost hidden">Logout</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- AUTH CARD -->
+    <section id="authView" class="card">
+      <div class="card-header">
+        <h1>Welcome back</h1>
+        <p>Login to access your dashboard, or sign up as a new student.</p>
+      </div>
+
+      <div class="grid two">
+        <!-- LOGIN -->
+        <div class="panel">
+          <h2>Login</h2>
+
+          <label class="field">
+            <span>Email</span>
+            <input id="loginEmail" type="email" placeholder="you@example.com" autocomplete="username" />
+          </label>
+
+          <label class="field">
+            <span>Password</span>
+            <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" />
+          </label>
+
+          <button id="loginBtn" class="btn btn-primary">Login</button>
+
+          <div class="divider"><span>or</span></div>
+
+          <button id="googleBtn" class="btn btn-soft">
+            <span class="icon">G</span> Sign in with Google
+          </button>
+
+          <button id="githubBtn" class="btn btn-soft">
+            <span class="icon">GH</span> Sign in with GitHub
+          </button>
+
+          <div class="hint">
+            <b>Admin login:</b> admin@test.com / 12345678
+          </div>
+        </div>
+
+        <!-- SIGNUP -->
+        <div class="panel">
+          <h2>Create new user</h2>
+          <p class="muted">New student accounts will be redirected to the Student Dashboard after sign up.</p>
+
+          <label class="field">
+            <span>Full Name</span>
+            <input id="signupName" type="text" placeholder="Muhammad Ali" autocomplete="name" />
+          </label>
+
+          <label class="field">
+            <span>Email</span>
+            <input id="signupEmail" type="email" placeholder="student@example.com" autocomplete="email" />
+          </label>
+
+          <label class="field">
+            <span>Password</span>
+            <input id="signupPassword" type="password" placeholder="Minimum 6 characters" autocomplete="new-password" />
+          </label>
+
+          <button id="signupBtn" class="btn btn-primary">Sign Up</button>
+
+          <div class="note">
+            By creating an account you agree to basic portal usage policies.
+          </div>
+        </div>
+      </div>
+
+      <div id="authMsg" class="msg hidden"></div>
+    </section>
+
+    <!-- STUDENT DASHBOARD -->
+    <section id="studentView" class="card hidden">
+      <div class="card-header">
+        <h1>Student Dashboard</h1>
+        <p>Enter your CNIC to view your record.</p>
+      </div>
+
+      <div class="grid two">
+        <div class="panel">
+          <h2>Find Student Data</h2>
+
+          <label class="field">
+            <span>CNIC (Pakistani format)</span>
+            <input id="cnicInput" type="text" placeholder="32203-9494999-1" inputmode="numeric" />
+          </label>
+
+          <button id="cnicSearchBtn" class="btn btn-primary">Search</button>
+
+          <div class="divider"><span>optional</span></div>
+          <button id="setPasswordBtn" class="btn btn-soft">Set Portal Password</button>
+
+          <div class="hint">
+            Pattern required: <b>32203-9494999-1</b> (5 digits - 7 digits - 1 digit)
+          </div>
+
+          <div id="studentMsg" class="msg hidden"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Result</h2>
+          <div id="resultCard" class="result">
+            <div class="result-empty">No data yet. Search using CNIC.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADMIN PANEL -->
+    <section id="adminView" class="card hidden">
+      <div class="card-header">
+        <h1>Admin Panel</h1>
+        <p>View all students and add new records to Firestore.</p>
+      </div>
+
+      <div class="grid two">
+        <div class="panel">
+          <div class="row-between">
+            <h2>All Students</h2>
+            <button id="refreshStudentsBtn" class="btn btn-ghost">Refresh</button>
+          </div>
+
+          <div id="adminMsg" class="msg hidden"></div>
+
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>CNIC</th>
+                  <th>Class</th>
+                </tr>
+              </thead>
+              <tbody id="studentsTbody">
+                <tr><td colspan="3" class="muted">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Add New Student</h2>
+
+          <label class="field">
+            <span>Student Name</span>
+            <input id="addName" type="text" placeholder="Ayesha Khan" />
+          </label>
+
+          <label class="field">
+            <span>CNIC (must match pattern)</span>
+            <input id="addCnic" type="text" placeholder="32203-9494999-1" inputmode="numeric" />
+          </label>
+
+          <label class="field">
+            <span>Class</span>
+            <input id="addClass" type="text" placeholder="10th / 1st Year / BS-CS" />
+          </label>
+
+          <button id="addStudentBtn" class="btn btn-primary">Submit</button>
+
+          <div class="hint">
+            CNIC restriction: <b>^\d{5}-\d{7}-\d{1}$</b>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>© Student Portal</span>
+      <span class="dot">•</span>
+      <span>Firebase Auth + Firestore</span>
+    </footer>
+
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
