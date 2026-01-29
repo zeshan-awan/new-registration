@@ -16,6 +16,8 @@ import {
   getRedirectResult,
   EmailAuthProvider,
   linkWithCredential,
+  setPersistence,
+  browserLocalPersistence,
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 import {
@@ -47,6 +49,13 @@ getAnalytics(app);
 
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Enable persistence for offline access and session persistence
+setPersistence(auth, browserLocalPersistence)
+  .catch((error) => {
+    console.warn('Persistence setup warning:', error?.message);
+    // Persistence may fail on certain platforms, but auth will still work
+  });
 
 // ===== Admin credentials (enforced) =====
 const ADMIN_EMAIL = "admin@test.com";
@@ -321,8 +330,10 @@ signupBtn.addEventListener("click", async () => {
 async function signInWithPopupOrRedirect(provider, providerName) {
   try {
     showMsg(authMsg, `Signing in with ${providerName}...`, "info");
+    console.log(`Attempting ${providerName} sign-in...`);
     
     const result = await signInWithPopup(auth, provider);
+    console.log(`${providerName} sign-in successful:`, result.user);
 
     if (result.user.email?.toLowerCase() === ADMIN_EMAIL) {
       showMsg(authMsg, "Admin must login using email/password only.", "error");
@@ -333,31 +344,45 @@ async function signInWithPopupOrRedirect(provider, providerName) {
     await ensureStudentProfile(result.user, providerName);
     showMsg(
       authMsg,
-      `Signed in with ${providerName[0].toUpperCase() + providerName.slice(1)}!`,
+      `Successfully signed in with ${providerName[0].toUpperCase() + providerName.slice(1)}! Redirecting to dashboard...`,
       "success",
     );
+    // Auto-redirect happens via onAuthStateChanged
   } catch (e) {
-    console.error(`${providerName} auth error:`, e);
+    console.error(`${providerName} auth error:`, e?.code, e?.message);
     
     // Handle specific common errors
     if (e?.code === "auth/popup-blocked") {
-      showMsg(authMsg, "Popup blocked by browser. Please allow popups and try again.", "error");
+      showMsg(authMsg, "Popup blocked. Please allow popups and try again.", "error");
+      console.warn(`${providerName}: Popup was blocked by browser.`);
     } else if (e?.code === "auth/popup-closed-by-user") {
-      showMsg(authMsg, "Sign-in cancelled. Please try again.", "error");
+      showMsg(authMsg, "Sign-in cancelled by user.", "error");
+      console.warn(`${providerName}: User closed popup.`);
     } else if (e?.code === "auth/cancelled-popup-request") {
-      showMsg(authMsg, "Sign-in cancelled. Please try again.", "error");
+      // This is usually harmless - user cancelled or multiple popups
+      console.warn(`${providerName}: Popup request cancelled.`);
     } else if (e?.code === "auth/unauthorized-domain") {
-      showMsg(authMsg, "This domain is not authorized. Please contact support.", "error");
+      showMsg(authMsg, `Domain not authorized for ${providerName}. Check Firebase settings.`, "error");
+      console.error(`${providerName}: This domain is not in the authorized list.`);
     } else if (e?.code === "auth/operation-not-allowed") {
-      showMsg(authMsg, `${providerName} sign-in is not enabled. Please contact support.`, "error");
+      showMsg(authMsg, `${providerName} is not enabled in Firebase Console.`, "error");
+      console.error(`${providerName}: Not enabled in Firebase Project.`);
     } else if (e?.code === "auth/account-exists-with-different-credential") {
-      showMsg(authMsg, "Account exists with different sign-in method. Try email/password.", "error");
+      showMsg(authMsg, "Account exists with different sign-in method. Use email/password or link account.", "error");
+      console.warn(`${providerName}: Account exists with different credential.`);
     } else if (e?.code === "auth/invalid-api-key") {
-      showMsg(authMsg, "Invalid API configuration. Please contact support.", "error");
+      showMsg(authMsg, "Invalid API key in Firebase config.", "error");
+      console.error(`${providerName}: Invalid API key.`);
     } else if (e?.code === "auth/app-not-authorized") {
-      showMsg(authMsg, "App not authorized. Please contact support.", "error");
+      showMsg(authMsg, "App not authorized in Firebase Console.", "error");
+      console.error(`${providerName}: App not authorized.`);
+    } else if (e?.code === "auth/invalid-user-token") {
+      showMsg(authMsg, "Session expired. Please try again.", "error");
+    } else if (e?.code === "auth/user-disabled") {
+      showMsg(authMsg, "This account has been disabled.", "error");
     } else {
-      showMsg(authMsg, `${providerName} sign-in failed. Please try again or contact support.`, "error");
+      showMsg(authMsg, `${providerName} sign-in failed: ${e?.message || 'Unknown error'}. Try again or contact support.`, "error");
+      console.error(`${providerName} error details:`, e);
     }
   }
 }
@@ -368,10 +393,11 @@ googleLoginBtn?.addEventListener("click", async () => {
     const provider = new GoogleAuthProvider();
     provider.addScope('email');
     provider.addScope('profile');
+    provider.setCustomParameters({ prompt: 'select_account' });
     await signInWithPopupOrRedirect(provider, "google");
   } catch (e) {
-    console.error('Google button error:', e);
-    showMsg(authMsg, `Google setup error: ${e.message}`, "error");
+    console.error('Google button setup error:', e);
+    showMsg(authMsg, `Google error: ${e.message}`, "error");
   }
 });
 
@@ -383,8 +409,8 @@ githubLoginBtn?.addEventListener("click", async () => {
     provider.addScope("read:user");
     await signInWithPopupOrRedirect(provider, "github");
   } catch (e) {
-    console.error('GitHub button error:', e);
-    showMsg(authMsg, `GitHub setup error: ${e.message}`, "error");
+    console.error('GitHub button setup error:', e);
+    showMsg(authMsg, `GitHub error: ${e.message}`, "error");
   }
 });
 
@@ -394,10 +420,11 @@ googleSignupBtn?.addEventListener("click", async () => {
     const provider = new GoogleAuthProvider();
     provider.addScope('email');
     provider.addScope('profile');
+    provider.setCustomParameters({ prompt: 'consent' });
     await signInWithPopupOrRedirect(provider, "google");
   } catch (e) {
     console.error('Google signup error:', e);
-    showMsg(authMsg, `Google setup error: ${e.message}`, "error");
+    showMsg(authMsg, `Google error: ${e.message}`, "error");
   }
 });
 
@@ -410,7 +437,7 @@ githubSignupBtn?.addEventListener("click", async () => {
     await signInWithPopupOrRedirect(provider, "github");
   } catch (e) {
     console.error('GitHub signup error:', e);
-    showMsg(authMsg, `GitHub setup error: ${e.message}`, "error");
+    showMsg(authMsg, `GitHub error: ${e.message}`, "error");
   }
 });
 
